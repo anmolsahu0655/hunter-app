@@ -1,0 +1,386 @@
+﻿<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunter Access - Final Secure</title>
+    <style>
+        /* --- AAPKA ORIGINAL DESIGN (NO CHANGE) --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { height: 100vh; background: #000; display: flex; justify-content: center; align-items: center; color: white; overflow: hidden; }
+        .mobile-frame { width: 100%; max-width: 375px; height: 100vh; background: #0a0a0a; position: relative; display: flex; flex-direction: column; border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a; }
+        
+        #call-screen { position: absolute; inset: 0; background: #050505; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 60px 20px; text-align: center; }
+        #remote-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #111; z-index: -1; }
+        .call-controls { display: flex; gap: 30px; margin-bottom: 40px; z-index: 101; }
+        .control-btn { width: 65px; height: 65px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; }
+
+        #login-screen { position: absolute; inset: 0; background: #000; z-index: 50; display: flex; flex-direction: column; justify-content: center; padding: 30px; text-align: center; }
+        .logo { font-size: 60px; margin-bottom: 10px; text-shadow: 0 0 20px #ff0000; }
+        input { width: 100%; padding: 18px; border: 1px solid #222; border-radius: 15px; background: #111; color: #ff3333; margin-bottom: 15px; outline: none; font-size: 16px; }
+        button { width: 100%; padding: 18px; background: #b30000; color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: 700; text-transform: uppercase; }
+        
+        #main-app { display: none; flex-direction: column; height: 100%; position: relative; }
+        .header { padding: 50px 20px 20px; background: #111; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5rem; color: #ff3333; }
+
+        .content-area { flex: 1; overflow-y: auto; padding: 20px 15px; display: none; }
+        .active-content { display: block; }
+
+        .contact-card { display: flex; align-items: center; padding: 18px; background: #121212; margin-bottom: 12px; border-radius: 20px; border: 1px solid #1a1a1a; cursor: pointer; }
+        .avatar { width: 50px; height: 50px; background: #000; border-radius: 50%; margin-right: 15px; display: flex; justify-content: center; align-items: center; border: 2px solid #ff3333; font-size: 24px; position: relative; }
+        .status-ring { position: absolute; inset: -4px; border: 2px solid #ff3333; border-radius: 50%; display: none; }
+        .has-status .status-ring { display: block; }
+
+        .bottom-nav { height: 85px; background: #111; border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; padding-bottom: 10px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #444; transition: 0.3s; width: 33%; }
+        .nav-item.active { color: #ff3333; }
+        .nav-icon { font-size: 26px; margin-bottom: 4px; }
+        .nav-text { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* CHAT PAGE (RESTORED) */
+        #chat-page { display: none; flex-direction: column; height: 100%; background: #000; position: absolute; inset: 0; z-index: 25; }
+        .chat-header { padding: 45px 20px 15px; background: #111; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        .chat-input-area { padding: 15px; background: #111; display: flex; align-items: center; gap: 12px; }
+        .chat-input-area input { flex: 1; padding: 15px 20px; border-radius: 30px; background: #000; border: 1px solid #333; color: white; outline: none; }
+        .send-btn-small { width: 50px; height: 50px; border-radius: 50%; background: #b30000; color: white; border: none; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+
+        .bubble { padding: 12px 16px; border-radius: 20px; margin: 8px 0; max-width: 85%; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+        .sent { background: #b30000; align-self: flex-end; border-bottom-right-radius: 4px; color: white; }
+        .received { background: #222; align-self: flex-start; border-bottom-left-radius: 4px; color: #eee; }
+        
+        /* Media Bubble Adjustment */
+        .media-bubble { padding: 5px; background: #111; border: 1px solid #333; }
+        .media-bubble img, .media-bubble video { max-width: 100%; border-radius: 15px; display: block; }
+
+        /* MEDIA MENU (RESTORED) */
+        #media-menu { display: none; position: absolute; bottom: 90px; left: 15px; background: #111; border: 1px solid #333; border-radius: 20px; padding: 12px; width: 180px; z-index: 30; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .media-option { padding: 12px; font-size: 15px; cursor: pointer; color: #ddd; display: flex; align-items: center; gap: 12px; }
+
+        /* PROFILE PAGE (LARGE SIZE RESTORED) */
+        #profile-page, #add-friend-page { display: none; flex-direction: column; height: 100%; background: #000; padding: 50px 20px; position: absolute; inset: 0; z-index: 60; }
+        .profile-pic-box { width: 110px; height: 110px; background: #111; border: 3px solid #ff3333; border-radius: 50%; margin: 20px auto; display: flex; justify-content: center; align-items: center; font-size: 55px; }
+        .profile-info-row { background: #111; padding: 20px; border-radius: 18px; text-align: left; margin-bottom: 15px; border: 1px solid #222; }
+
+        /* STATUS & ADD BUTTONS */
+        #create-status-menu { position: absolute; bottom: 180px; right: 25px; background: #111; border: 1px solid #333; border-radius: 15px; padding: 10px; display: none; flex-direction: column; gap: 10px; z-index: 20; }
+        #status-viewer { position: absolute; inset: 0; background: #000; z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .status-progress { position: absolute; top: 10px; left: 10px; right: 10px; height: 3px; background: #333; }
+        .status-bar { height: 100%; background: #ff3333; width: 0%; transition: width 0.1s linear; }
+        .poll-option { background: #222; padding: 12px; margin: 10px 0; border-radius: 10px; cursor: pointer; position: relative; overflow: hidden; }
+        .poll-fill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(255,0,0,0.2); width: 0%; transition: width 0.5s; }
+        .hidden { display: none; }
+        .float-btn { position: absolute; bottom: 110px; right: 25px; width: 65px; height: 65px; background: #ff0000; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 35px; color: white; border: none; z-index: 10; cursor: pointer; box-shadow: 0 5px 20px rgba(255,0,0,0.4); }
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <div id="status-viewer" onclick="closeStatus()">
+            <div class="status-progress"><div class="status-bar" id="status-timer"></div></div>
+            <div id="status-content" style="width:100%; text-align:center;"></div>
+        </div>
+
+        <div id="call-screen">
+            <video id="remote-video" autoplay playsinline></video>
+            <div>
+                <div class="avatar" style="width:90px; height:90px; margin:0 auto 20px; border-width:3px;">🐺</div>
+                <h2 id="calling-name">Target</h2>
+                <p id="call-type-status" style="color:#ff3333;">Securing Line...</p>
+            </div>
+            <div class="call-controls">
+                <div class="control-btn" onclick="endCall()" style="background:#ff0000;">📞</div>
+            </div>
+        </div>
+
+        <div id="login-screen">
+            <div class="logo">🧛‍♂️</div>
+            <h2 style="color:#ff3333; margin-bottom:30px;">HUNTER ACCESS</h2>
+            <div id="login-form">
+                <input type="text" id="user-id-input" placeholder="Email or Phone">
+                <button onclick="requestOTP()">Get Secure Access</button>
+            </div>
+            <div id="otp-form" class="hidden">
+                <p>CODE: <span id="display-otp" style="color:#ff3333;">0707</span></p>
+                <input type="number" id="otp-entry" placeholder="Enter Code">
+                <button onclick="verifyAccess()">Verify</button>
+            </div>
+        </div>
+
+        <div id="main-app">
+            <div class="header">
+                <h1 id="top-title">Active Squad</h1>
+                <div onclick="showProfile()" style="cursor:pointer; font-size:30px; color:#ff3333;">👤</div>
+            </div>
+            
+            <div id="chats-tab" class="content-area active-content">
+                <div id="chat-list-container">
+                    <div class="contact-card" onclick="startChatting('Alpha Wolf')">
+                        <div class="avatar">🐺</div>
+                        <div class="info"><b>Alpha Wolf</b><br><small style="color:#ff3333;">@alpha_leader</small></div>
+                    </div>
+                </div>
+                <button class="float-btn" onclick="showAddFriend()">+</button>
+            </div>
+
+            <div id="status-tab" class="content-area">
+                <div class="contact-card" id="my-status-card" onclick="viewMyStatus()">
+                    <div class="avatar">🧛‍♂️<div class="status-ring"></div></div>
+                    <div class="info"><b>My Status</b><br><small id="status-time-text">Tap to add update</small></div>
+                </div>
+                <div id="create-status-menu">
+                    <div onclick="createTextStatus()" style="padding:10px; cursor:pointer;">✍️ Text</div>
+                    <div onclick="document.getElementById('status-img-input').click()" style="padding:10px; cursor:pointer;">📷 Image</div>
+                    <div onclick="createPollStatus()" style="padding:10px; cursor:pointer;">📊 Poll</div>
+                </div>
+                <button class="float-btn" onclick="toggleStatusMenu()">+</button>
+                <input type="file" id="status-img-input" class="hidden" accept="image/*" onchange="handleImageStatus(this)">
+            </div>
+
+            <div id="calls-tab" class="content-area">
+                <div class="contact-card">
+                    <div class="avatar">🐺</div>
+                    <div class="info"><b>Alpha Wolf</b><br><small>📞 Outgoing, Today 5:00 PM</small></div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <div class="nav-item active" id="btn-chats" onclick="navTo('chats')">
+                    <div class="nav-icon">💬</div><div class="nav-text">Chats</div>
+                </div>
+                <div class="nav-item" id="btn-status" onclick="navTo('status')">
+                    <div class="nav-icon">⭕</div><div class="nav-text">Status</div>
+                </div>
+                <div class="nav-item" id="btn-calls" onclick="navTo('calls')">
+                    <div class="nav-icon">📞</div><div class="nav-text">Calls</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="add-friend-page">
+            <div onclick="hideAddFriend()" style="color:#ff3333; cursor:pointer; margin-bottom:30px;">← Back</div>
+            <h2 style="color:#ff3333; margin-bottom:20px;">Search Squad</h2>
+            <input type="text" id="friend-search-input" placeholder="Enter Name or Handle...">
+            <button onclick="addNewFriend()">Add to Squad</button>
+        </div>
+
+        <div id="chat-page">
+            <div class="chat-header">
+                <span onclick="exitChat()" style="cursor:pointer; font-size:24px; color:#ff3333;">←</span>
+                <b id="target-name">Target</b>
+                <div style="display:flex; gap:25px;">
+                    <span onclick="triggerCall('Audio')" style="cursor:pointer;">📞</span>
+                    <span onclick="triggerCall('Video')" style="cursor:pointer;">📹</span>
+                </div>
+            </div>
+            <div class="content-area active-content" id="chat-messages" style="display:flex; flex-direction:column;"></div>
+            
+            <div id="media-menu">
+                <div class="media-option" onclick="document.getElementById('msg-img-input').click()">🖼️ Photo</div>
+                <div class="media-option" onclick="document.getElementById('msg-vid-input').click()">🎥 Video</div>
+            </div>
+
+            <div class="chat-input-area">
+                <span onclick="toggleMedia()" style="font-size:32px; color:#ff3333; cursor:pointer;">+</span>
+                <input type="text" id="type-msg" placeholder="Type message...">
+                <button class="send-btn-small" onclick="pushMessage()">➤</button>
+            </div>
+            
+            <input type="file" id="msg-img-input" class="hidden" accept="image/*" onchange="sendMediaMsg(this, 'img')">
+            <input type="file" id="msg-vid-input" class="hidden" accept="video/*" onchange="sendMediaMsg(this, 'vid')">
+        </div>
+
+        <div id="profile-page">
+            <div onclick="hideProfile()" style="color:#ff3333; cursor:pointer; margin-bottom:20px;">← Back</div>
+            <div class="profile-pic-box">👤</div>
+            <h2 style="text-align:center; color:#ff3333; margin-bottom:20px;">Profile Details</h2>
+            <div class="profile-info-row"><b>Display Name:</b><br><span style="color:#fff;">Monster Hunter</span></div>
+            <div class="profile-info-row"><b>Unique Handle:</b><br><span style="color:#fff;">@monster_07</span></div>
+            <button onclick="location.reload()" style="background:none; border:2px solid #ff3333; color:#ff3333; width:100%; padding:15px; margin-top:20px;">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        let myStream = null;
+        let currentStatus = null;
+        let statusInterval = null;
+
+        // --- LOGIN ---
+        function requestOTP() {
+            if(!document.getElementById('user-id-input').value) return alert("ID Required");
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('otp-form').classList.remove('hidden');
+            document.getElementById('display-otp').innerText = "0707";
+        }
+        function verifyAccess() {
+            if(document.getElementById('otp-entry').value == "0707") {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                checkStatusExpiry();
+            } else { alert("Wrong OTP"); }
+        }
+
+        // --- NAVIGATION ---
+        function navTo(tab) {
+            document.querySelectorAll('.content-area').forEach(el => el.classList.remove('active-content'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active-content');
+            document.getElementById('btn-' + tab).classList.add('active');
+            document.getElementById('top-title').innerText = tab.toUpperCase();
+            document.getElementById('create-status-menu').style.display = 'none';
+        }
+
+        // --- CHAT & MEDIA MESSAGING ---
+        function startChatting(name) {
+            document.getElementById('chat-page').style.display = 'flex';
+            document.getElementById('target-name').innerText = name;
+        }
+        function exitChat() { document.getElementById('chat-page').style.display = 'none'; }
+        
+        function toggleMedia() {
+            let m = document.getElementById('media-menu');
+            m.style.display = (m.style.display == 'block') ? 'none' : 'block';
+        }
+
+        function pushMessage() {
+            let inp = document.getElementById('type-msg');
+            if(inp.value.trim()) {
+                appendBubble('text', inp.value);
+                inp.value = '';
+            }
+        }
+
+        function sendMediaMsg(input, type) {
+            if(input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = (e) => {
+                    appendBubble(type, e.target.result);
+                    toggleMedia();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function appendBubble(type, content) {
+            let box = document.getElementById('chat-messages');
+            let b = document.createElement('div');
+            b.className = 'bubble sent';
+            if(type === 'text') {
+                b.innerText = content;
+            } else if(type === 'img') {
+                b.className += ' media-bubble';
+                b.innerHTML = `<img src="${content}">`;
+            } else if(type === 'vid') {
+                b.className += ' media-bubble';
+                b.innerHTML = `<video src="${content}" controls></video>`;
+            }
+            box.appendChild(b);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // --- ADD FRIEND ---
+        function showAddFriend() { document.getElementById('add-friend-page').style.display = 'flex'; }
+        function hideAddFriend() { document.getElementById('add-friend-page').style.display = 'none'; }
+        function addNewFriend() {
+            let name = document.getElementById('friend-search-input').value.trim();
+            if(!name) return alert("Enter name");
+            let container = document.getElementById('chat-list-container');
+            let card = document.createElement('div');
+            card.className = 'contact-card';
+            card.onclick = () => startChatting(name);
+            card.innerHTML = `<div class="avatar">👤</div><div class="info"><b>${name}</b><br><small style="color:#ff3333;">@${name.toLowerCase()}</small></div>`;
+            container.appendChild(card);
+            hideAddFriend();
+        }
+
+        // --- STATUS SYSTEM ---
+        function toggleStatusMenu() {
+            let m = document.getElementById('create-status-menu');
+            m.style.display = (m.style.display == 'flex') ? 'none' : 'flex';
+        }
+        function saveStatus(data) {
+            data.time = Date.now();
+            localStorage.setItem('hunter_status_final', JSON.stringify(data));
+            toggleStatusMenu();
+            checkStatusExpiry();
+        }
+        function createTextStatus() {
+            let t = prompt("Status:");
+            if(t) saveStatus({type: 'text', content: t});
+        }
+        function handleImageStatus(input) {
+            if(input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = (e) => saveStatus({type: 'image', content: e.target.result});
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        function createPollStatus() {
+            let q = prompt("Question:");
+            let o1 = prompt("Opt 1:"); let o2 = prompt("Opt 2:"); let o3 = prompt("Opt 3:");
+            if(q && o1 && o2 && o3) saveStatus({type:'poll', q:q, options:[o1,o2,o3], votes:[0,0,0], voted:false});
+        }
+        function checkStatusExpiry() {
+            let data = localStorage.getItem('hunter_status_final');
+            if(data) {
+                let s = JSON.parse(data);
+                if(Date.now() - s.time < 86400000) {
+                    currentStatus = s;
+                    document.getElementById('my-status-card').classList.add('has-status');
+                    return;
+                }
+                localStorage.removeItem('hunter_status_final');
+            }
+            currentStatus = null;
+            document.getElementById('my-status-card').classList.remove('has-status');
+        }
+        function viewMyStatus() {
+            if(!currentStatus) return toggleStatusMenu();
+            let viewer = document.getElementById('status-viewer');
+            let content = document.getElementById('status-content');
+            viewer.style.display = 'flex';
+            content.innerHTML = '';
+            if(currentStatus.type == 'text') content.innerHTML = `<h1>${currentStatus.content}</h1>`;
+            else if(currentStatus.type == 'image') content.innerHTML = `<img src="${currentStatus.content}" style="max-width:100%; max-height:80vh;">`;
+            else if(currentStatus.type == 'poll') renderPoll(content);
+
+            let bar = document.getElementById('status-timer');
+            let w = 0; clearInterval(statusInterval);
+            statusInterval = setInterval(() => {
+                if(w >= 100) { clearInterval(statusInterval); if(currentStatus.type != 'poll') closeStatus(); }
+                else { w += 2; bar.style.width = w + '%'; }
+            }, 100);
+        }
+        function renderPoll(container) {
+            let total = currentStatus.votes.reduce((a,b)=>a+b,0);
+            let html = `<h3>${currentStatus.q}</h3>`;
+            currentStatus.options.forEach((o, i) => {
+                let p = total > 0 ? Math.round((currentStatus.votes[i]/total)*100) : 0;
+                html += `<div class="poll-option" onclick="vote(${i})"><div class="poll-fill" style="width:${p}%"></div>${o} (${p}%)</div>`;
+            });
+            container.innerHTML = html;
+        }
+        function vote(i) {
+            if(currentStatus.voted) return;
+            currentStatus.votes[i]++; currentStatus.voted = true;
+            localStorage.setItem('hunter_status_final', JSON.stringify(currentStatus));
+            renderPoll(document.getElementById('status-content'));
+        }
+        function closeStatus() { document.getElementById('status-viewer').style.display='none'; clearInterval(statusInterval); }
+
+        // --- CALLS & PROFILE ---
+        async function triggerCall(mode) {
+            document.getElementById('call-screen').style.display = 'flex';
+            document.getElementById('calling-name').innerText = document.getElementById('target-name').innerText;
+            try {
+                myStream = await navigator.mediaDevices.getUserMedia({audio:true, video:mode=='Video'});
+                if(mode=='Video') document.getElementById('remote-video').srcObject = myStream;
+            } catch(e) { endCall(); }
+        }
+        function endCall() { if(myStream) myStream.getTracks().forEach(t=>t.stop()); document.getElementById('call-screen').style.display='none'; }
+        function showProfile() { document.getElementById('profile-page').style.display='flex'; }
+        function hideProfile() { document.getElementById('profile-page').style.display='none'; }
+
+        setInterval(checkStatusExpiry, 60000);
+    </script>
+</body>
+</html>
